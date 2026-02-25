@@ -19,7 +19,27 @@ namespace DesignAutomation.Services
         {
             var token = await _tokenService.GetTokenAsync();
 
-            var workItem = new WorkItem()
+            //key "string" phải khớp với các giá trị trong activity
+            //value "IArgument" là các tham số truyền vào (xrefTreeArgument là loại tham số truyền file)
+            //var workItemRevit = new WorkItem()
+            //{
+            //    ActivityId = request.activityId,
+            //    Arguments = new Dictionary<string, IArgument>() 
+            //    {
+            //        { "rvtFile", new XrefTreeArgument() {
+            //            Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.inputObjectKey}", //địa chỉ định danh tệp tin trên Oss
+            //            Verb = Verb.Get,
+            //            Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
+            //        } },
+            //        { "resultFile", new XrefTreeArgument() {
+            //            Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.resultObjectKey}",
+            //            Verb = Verb.Put,
+            //            Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
+            //        } }
+            //    }
+            //};
+
+            var workItemAutoCad = new WorkItem()
             {
                 ActivityId = request.activityId,
                 Arguments = new Dictionary<string, IArgument>() 
