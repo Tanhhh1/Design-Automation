@@ -21,8 +21,21 @@ namespace DesignAutomation.Services
                 CommandLine = request.commandLine,
                 Appbundles = request.appBundles,
                 Parameters = new Dictionary<string, Parameter>()
+                //Settings = new Dictionary<string, ISetting>()
             };
-
+            /*if (request.settings != null)
+            {
+                foreach (var setting in request.settings)
+                {
+                    activity.Settings.Add(
+                        setting.Key,
+                        new StringSetting
+                        {
+                            Value = setting.Value
+                        }
+                    );
+                }
+            }*/
             if (request.parameters != null)
             {
                 foreach (var item in request.parameters)
@@ -62,7 +75,21 @@ namespace DesignAutomation.Services
                 Appbundles = request.appBundles,
                 CommandLine = request.commandLine,
                 Parameters = new Dictionary<string, Parameter>()
+                //Settings = new Dictionary<string, ISetting>()
             };
+            /*if (request.settings != null)
+            {
+                foreach (var setting in request.settings)
+                {
+                    newVersion.Settings.Add(
+                        setting.Key,
+                        new StringSetting
+                        {
+                            Value = setting.Value
+                        }
+                    );
+                }
+            }*/
             if (request.parameters != null)
             {
                 foreach (var item in request.parameters)
