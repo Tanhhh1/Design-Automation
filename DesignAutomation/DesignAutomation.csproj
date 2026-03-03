@@ -13,6 +13,7 @@
     <PackageReference Include="Autodesk.ModelDerivative" Version="2.2.0" />
     <PackageReference Include="Autodesk.Oss" Version="2.3.3" />
     <PackageReference Include="Autodesk.SDKManager" Version="1.1.2" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.23" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
   </ItemGroup>

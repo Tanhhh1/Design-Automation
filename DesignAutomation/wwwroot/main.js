@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('fileInput').addEventListener('change', uploadFile);
 
     document.getElementById('btnDownload').addEventListener('click', downloadFile);
+
+    document.getElementById('btnExportExcel').addEventListener('click', exportAllToExcel);
+
+    document.getElementById('btnExportSelection').addEventListener('click', exportSelectionToExcel);
 });
 
 async function loadFiles() {
@@ -25,12 +29,31 @@ async function loadFiles() {
 }
 
 async function uploadFile(e) {
-    const file = e.target.files[0];
+    /*const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
-    formData.append('file', file);
-    await fetch('/api/oss/upload', { method: 'POST', body: formData });
-    await loadFiles();
+    formData.append('file', file); //đóng gói file vào formData
+    await fetch('/api/oss/upload', { method: 'POST', body: formData }); //gửi file đến /api/oss/upload
+    await loadFiles();*/
+
+    const file = e.target.files[0];
+    if (!file) return;
+    const resp = await fetch(`/api/oss/upload-url?fileName=${encodeURIComponent(file.name)}`); //lấy signed URL từ server
+    const data = await resp.json();
+    const signedUrl = data.uploadUrl; // Đây là địa chỉ trực tiếp dẫn đến Cloud của Autodesk
+    const uploadResp = await fetch(signedUrl, {
+        method: 'PUT', // Dùng PUT để đặt file vào vị trí đã định danh
+        body: file, // Gửi trực tiếp dữ liệu nhị phân (không đóng gói FormData)
+        headers: {
+            'Content-Type': 'application/octet-stream' // Báo hiệu đây là dữ liệu thô
+        }
+    });
+    if (uploadResp.ok) {
+        alert("Upload trực tiếp thành công!");
+        await loadFiles();
+    } else {
+        alert("Upload thất bại!");
+    }
 }
 
 async function downloadFile() {
@@ -80,4 +103,78 @@ async function handleTranslation(urn) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ urn: urn })
     });
+}
+
+
+async function exportAllToExcel() {
+    if (!viewer || !viewer.model) return;
+    const tree = viewer.model.getInstanceTree();
+    const allDbIds = [];
+    if (tree) {
+        const rootId = tree.getRootId();
+        tree.enumNodeChildren(rootId, (dbId) => {
+            allDbIds.push(dbId);
+        }, true);
+    } else {
+        const lastId = viewer.model.getData().instanceCount;
+        for (let i = 1; i <= lastId; i++) {
+            allDbIds.push(i);
+        }
+    }
+    viewer.model.getBulkProperties(allDbIds, null, (elements) => {
+        const validElements = elements.filter(el =>
+            el.properties && el.properties.some(p => p.displayName === "Category")
+        );
+
+        if (validElements.length > 0) {
+            executeExport(validElements, "Revit_Full_Export");
+        }
+    });
+}
+
+async function exportSelectionToExcel() {
+    const selection = viewer.getSelection();
+    if (selection.length === 0) return;
+
+    viewer.model.getBulkProperties(selection, null, (elements) => {
+        executeExport(elements, "Revit_Selection_Export");
+    });
+}
+
+async function executeExport(data, fileNamePrefix) {
+    try {
+        const payload = data.map(el => ({
+            dbId: el.dbId,
+            name: el.name,
+            properties: el.properties.map(p => ({
+                displayName: p.displayName,
+                displayValue: p.displayValue
+            }))
+        }));
+
+        const response = await fetch('/api/oss/excel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) return;
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `${fileNamePrefix}_${new Date().getTime()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        }, 100);
+
+    } catch (err) {
+        console.error("Export Error:", err);
+    }
 }
