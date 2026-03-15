@@ -1,5 +1,8 @@
+using Autodesk.Authentication;
 using Autodesk.Forge.Core;
 using Autodesk.Forge.DesignAutomation;
+using Autodesk.Oss;
+using Autodesk.SDKManager;
 using DesignAutomation.Config;
 using DesignAutomation.Services;
 
@@ -17,8 +20,18 @@ builder.Services.Configure<ForgeConfiguration>(config =>
     config.ClientSecret = apsSection["ClientSecret"];
 });
 
+SDKManager sdkManager = SdkManagerBuilder.Create().Build();
+builder.Services.AddSingleton(sdkManager);
+
+builder.Services.AddSingleton<AuthenticationClient>(sp =>
+    new AuthenticationClient(sp.GetRequiredService<SDKManager>()));
+
+builder.Services.AddSingleton<OssClient>(sp =>
+    new OssClient(sp.GetRequiredService<SDKManager>()));
+
 builder.Services.AddDesignAutomation(apsSection);
 
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<AppBundleService>();
 builder.Services.AddScoped<ActivityService>();

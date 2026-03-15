@@ -17,28 +17,16 @@ namespace DesignAutomation.Services
             _ossClient = new OssClient();
         }
 
-        public async Task<List<FileDetails>> GetFilesAsync()
+        public async Task<List<ObjectDetails>> GetObjectsAsync()
         {
-            var tokenResponse = await _tokenService.GetTokenAsync();
-            var fileList = new List<FileDetails>();
-            string nextToken = null;
-            do
-            {
-                var objects = await _ossClient.GetObjectsAsync(_bucketKey, startAt: nextToken, accessToken: tokenResponse.access_token);
-                if (objects.Items != null)
-                {
-                    foreach (var obj in objects.Items)
-                    {
-                        fileList.Add(new FileDetails
-                        {
-                            FileName = obj.ObjectKey,
-                            Urn = Base64Encode(obj.ObjectId)
-                        });
-                    }
-                }
-                nextToken = objects.Next;
-            } while (!string.IsNullOrEmpty(nextToken)); //nếu số lượng file trong bucket quá lớn, server sẽ trả về một nextToken. vòng lặp này đảm bảo code sẽ tiếp tục lấy dữ liệu cho đến khi không còn nextToken
-            return fileList;
+            var token = await _tokenService.GetTokenAsync();
+
+            BucketObjects objects = await _ossClient.GetObjectsAsync(
+                _bucketKey,
+                accessToken: token.AccessToken
+            );
+
+            return objects.Items?.ToList() ?? new List<ObjectDetails>();
         }
 
         /*Large-file upload:
@@ -53,7 +41,7 @@ namespace DesignAutomation.Services
                 fileName,
                 createSignedResource,
                 access: Access.Write,
-                accessToken: token.access_token);
+                accessToken: token.AccessToken);
 
             return response.SignedUrl;
         }
@@ -64,14 +52,14 @@ namespace DesignAutomation.Services
         public async Task UploadFileAsync(string fileName, Stream stream)
         {
             var token = await _tokenService.GetTokenAsync();
-            await _ossClient.UploadObjectAsync(_bucketKey, fileName, stream, accessToken: token.access_token); //nhận 1 Stream từ controller, dùng UploadObjectAsync để tải lên S3 trực tiếp từ server.
+            await _ossClient.UploadObjectAsync(_bucketKey, fileName, stream, accessToken: token.AccessToken); //nhận 1 Stream từ controller, dùng UploadObjectAsync để tải lên S3 trực tiếp từ server.
         }
 
         public async Task<string> GetDownloadUrlAsync(string fileName)
         {
             var token = await _tokenService.GetTokenAsync();
             var createSignedResource = new CreateSignedResource { MinutesExpiration = 2 }; //tạo ra 1 đường dẫn tải xuống có hiệu lực trong 2 phút
-            var response = await _ossClient.CreateSignedResourceAsync(_bucketKey, fileName, createSignedResource, access: Access.Read, accessToken: token.access_token);
+            var response = await _ossClient.CreateSignedResourceAsync(_bucketKey, fileName, createSignedResource, access: Access.Read, accessToken: token.AccessToken);
             return response.SignedUrl;
         }
 

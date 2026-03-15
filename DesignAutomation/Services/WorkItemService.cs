@@ -29,12 +29,12 @@ namespace DesignAutomation.Services
                     { "rvtFile", new XrefTreeArgument() {
                         Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.inputObjectKey}", //địa chỉ định danh tệp tin trên Oss
                         Verb = Verb.Get,
-                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
+                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.AccessToken } }
                     } },
                     { "resultFile", new XrefTreeArgument() {
                         Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.resultObjectKey}",
                         Verb = Verb.Put,
-                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
+                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.AccessToken } }
                     } }
 
                     /*{ "InputDwg", new XrefTreeArgument() {

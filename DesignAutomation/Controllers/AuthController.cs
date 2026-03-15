@@ -1,4 +1,5 @@
-﻿using DesignAutomation.Services;
+﻿using Autodesk.Authentication.Model;
+using DesignAutomation.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DesignAutomation.Controllers
@@ -15,10 +16,14 @@ namespace DesignAutomation.Controllers
         }
 
         [HttpGet("token")]
-        public async Task<Token> GetToken()
+        public async Task<IActionResult> GetToken()
         {
-            var token = await _tokenService.GetTokenAsync();
-            return token;
+            TwoLeggedToken token = await _tokenService.GetTokenAsync();
+            return Ok(new
+            {
+                access_token = token.AccessToken,
+                expires_in = token.ExpiresIn
+            });
         }
     }
 }

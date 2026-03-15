@@ -1,7 +1,6 @@
 ﻿using DesignAutomation.Models.WorkItem;
 using DesignAutomation.Services;
 using Microsoft.AspNetCore.Mvc;
-using static DesignAutomation.Services.OssService;
 
 
 namespace DesignAutomation.Controllers
@@ -20,7 +19,7 @@ namespace DesignAutomation.Controllers
         [HttpGet("files")]
         public async Task<IActionResult> GetBucketFiles()
         {
-            var files = await _ossService.GetFilesAsync();
+            var files = await _ossService.GetObjectsAsync();
             return Ok(files);
         }
 

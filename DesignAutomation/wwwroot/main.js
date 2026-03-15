@@ -15,6 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('btnExportSelection').addEventListener('click', exportSelectionToExcel);
 });
 
+function safeBase64(str) {
+    return btoa(str).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
+}
+
 async function loadFiles() {
     const resp = await fetch('/api/oss/files');
     const files = await resp.json();
@@ -22,8 +26,8 @@ async function loadFiles() {
     select.innerHTML = '<option value="">-- Chọn file để xem --</option>';
     files.forEach(f => {
         const opt = document.createElement('option');
-        opt.value = f.urn;
-        opt.textContent = f.fileName;
+        opt.value = safeBase64(f.objectId);
+        opt.textContent = f.objectKey;
         select.appendChild(opt);
     });
 }
