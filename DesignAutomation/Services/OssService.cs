@@ -63,12 +63,6 @@ namespace DesignAutomation.Services
             return response.SignedUrl;
         }
 
-        private string Base64Encode(string plainText)
-        {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes).Replace("/", "_").Replace("+", "-").TrimEnd('=');
-        }
-
         public byte[] ExportToExcel(List<ElementDto> elements)
         {
             using (var workbook = new XLWorkbook())
