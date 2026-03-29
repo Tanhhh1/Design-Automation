@@ -29,38 +29,30 @@ namespace DesignAutomation.Services
             return objects.Items?.ToList() ?? new List<ObjectDetails>();
         }
 
-        /*Large-file upload:
-        client -> S3
-        dùng cho file lớn lên đến 5GB (hoặc 5TB nếu dùng Multipart)*/
-        public async Task<string> GetUploadUrlAsync(string fileName)
+        public async Task<ObjectDetails> UploadFileToOssAsync(string filePath, string objectKey, IProgress<int> progress = null)
         {
             var token = await _tokenService.GetTokenAsync();
-            var createSignedResource = new CreateSignedResource { MinutesExpiration = 10 }; //tạo ra 1 đường dẫn có hiệu lực trong 10 phút, cho phép client tải lên trực tiếp đến S3 mà không cần đi qua server
-            var response = await _ossClient.CreateSignedResourceAsync(
-                _bucketKey,
-                fileName,
-                createSignedResource,
-                access: Access.Write,
-                accessToken: token.AccessToken);
 
-            return response.SignedUrl;
+            var response = await _ossClient.UploadObjectAsync(
+                bucketKey: _bucketKey,
+                objectKey: objectKey,
+                sourceToUpload: filePath,
+                accessToken: token.AccessToken,
+                progress: progress
+            );
+
+            return response;
         }
 
-        /*Server-side upload: 
-        client -> server -> S3
-        dùng cho file nhỏ*/        
-        public async Task UploadFileAsync(string fileName, Stream stream)
+        public async Task<Stream> DownloadFileAsync(string objectKey)
         {
             var token = await _tokenService.GetTokenAsync();
-            await _ossClient.UploadObjectAsync(_bucketKey, fileName, stream, accessToken: token.AccessToken); //nhận 1 Stream từ controller, dùng UploadObjectAsync để tải lên S3 trực tiếp từ server.
-        }
 
-        public async Task<string> GetDownloadUrlAsync(string fileName)
-        {
-            var token = await _tokenService.GetTokenAsync();
-            var createSignedResource = new CreateSignedResource { MinutesExpiration = 2 }; //tạo ra 1 đường dẫn tải xuống có hiệu lực trong 2 phút
-            var response = await _ossClient.CreateSignedResourceAsync(_bucketKey, fileName, createSignedResource, access: Access.Read, accessToken: token.AccessToken);
-            return response.SignedUrl;
+            return await _ossClient.DownloadObjectAsync(
+                bucketKey: _bucketKey,
+                objectKey: objectKey,
+                accessToken: token.AccessToken
+            );
         }
 
         public byte[] ExportToExcel(List<ElementDto> elements)

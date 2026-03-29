@@ -20,40 +20,10 @@ namespace DesignAutomation.Services
                 Engine = request.engine,
                 CommandLine = request.commandLine,
                 Appbundles = request.appBundles,
-                Parameters = new Dictionary<string, Parameter>()
-                //Settings = new Dictionary<string, ISetting>()
+                Parameters = MapParameters(request.parameters),
+                Settings = MapSettings(request.settings)
             };
-            /*if (request.settings != null)
-            {
-                foreach (var setting in request.settings)
-                {
-                    activity.Settings.Add(
-                        setting.Key,
-                        new StringSetting
-                        {
-                            Value = setting.Value
-                        }
-                    );
-                }
-            }*/
-            if (request.parameters != null)
-            {
-                foreach (var item in request.parameters)
-                {
-                    if (Enum.TryParse(item.Value.Verb, true, out Verb verbEnum)) //chuyển chuỗi thành enum
-                    {
-                        activity.Parameters.Add(item.Key, new Parameter
-                        {
-                            Verb = verbEnum,
-                            Description = item.Value.Description,
-                            LocalName = item.Value.LocalName,
-                            Required = item.Value.Required,
-                            Zip = item.Value.Zip,
-                            Ondemand = item.Value.Ondemand
-                        });
-                    }
-                }
-            }
+
             return await _daClient.CreateActivityAsync(activity);
         }
 
@@ -74,40 +44,10 @@ namespace DesignAutomation.Services
                 Engine = request.engine,
                 Appbundles = request.appBundles,
                 CommandLine = request.commandLine,
-                Parameters = new Dictionary<string, Parameter>()
-                //Settings = new Dictionary<string, ISetting>()
+                Parameters = MapParameters(request.parameters),
+                Settings = MapSettings(request.settings)
             };
-            /*if (request.settings != null)
-            {
-                foreach (var setting in request.settings)
-                {
-                    newVersion.Settings.Add(
-                        setting.Key,
-                        new StringSetting
-                        {
-                            Value = setting.Value
-                        }
-                    );
-                }
-            }*/
-            if (request.parameters != null)
-            {
-                foreach (var item in request.parameters)
-                {
-                    if (Enum.TryParse(item.Value.Verb, true, out Verb verbEnum)) 
-                    {
-                        newVersion.Parameters.Add(item.Key, new Parameter
-                        {
-                            Verb = verbEnum,
-                            Description = item.Value.Description,
-                            LocalName = item.Value.LocalName,
-                            Required = item.Value.Required,
-                            Zip = item.Value.Zip,
-                            Ondemand = item.Value.Ondemand
-                        });
-                    }
-                }
-            }
+
             return await _daClient.CreateActivityVersionAsync(id, newVersion);
         }
 
@@ -115,6 +55,42 @@ namespace DesignAutomation.Services
         {
             var aliasUpdate = new AliasPatch { Version = request.version };
             await _daClient.ModifyActivityAliasAsync(id, aliasId, aliasUpdate);
+        }
+
+
+        private Dictionary<string, Parameter> MapParameters(Dictionary<string, ParameterRequest> source)
+        {
+            var result = new Dictionary<string, Parameter>();
+            if (source == null) return result;
+
+            foreach (var item in source)
+            {
+                if (Enum.TryParse(item.Value.Verb, true, out Verb verbEnum))
+                {
+                    result.Add(item.Key, new Parameter
+                    {
+                        Verb = verbEnum,
+                        Description = item.Value.Description,
+                        LocalName = item.Value.LocalName,
+                        Required = item.Value.Required,
+                        Zip = item.Value.Zip,
+                        Ondemand = item.Value.Ondemand
+                    });
+                }
+            }
+            return result;
+        }
+
+        private Dictionary<string, ISetting> MapSettings(Dictionary<string, string> source)
+        {
+            var result = new Dictionary<string, ISetting>();
+            if (source == null) return result;
+
+            foreach (var setting in source)
+            {
+                result.Add(setting.Key, new StringSetting { Value = setting.Value });
+            }
+            return result;
         }
     }
 }

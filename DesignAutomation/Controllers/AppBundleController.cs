@@ -20,7 +20,7 @@ namespace DesignAutomation.Controllers
             return Ok(result);
         }
         [HttpPost("{id}/versions")]
-        public async Task<IActionResult> CreateVersion(string id, [FromForm] string engine, IFormFile fileZip)
+        public async Task<IActionResult> CreateVersion(string id, string engine, IFormFile fileZip)
         {
             var result = await _appBundleService.CreateVersionAsync(id, engine, fileZip);
             return Ok(result);

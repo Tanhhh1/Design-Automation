@@ -1,5 +1,6 @@
 ﻿using Autodesk.Forge.DesignAutomation;
 using Autodesk.Forge.DesignAutomation.Model;
+using Autodesk.Oss.Model;
 using DesignAutomation.Models.WorkItem;
 
 namespace DesignAutomation.Services
@@ -15,7 +16,7 @@ namespace DesignAutomation.Services
             _tokenService = tokenService;
         }
 
-        public async Task<WorkItemStatus> CreateWorkItemAsync(WorkItemRequest request)
+        public async Task<WorkItemResponse> CreateWorkItemAsync(WorkItemRequest request)
         {
             var token = await _tokenService.GetTokenAsync();
 
@@ -26,36 +27,38 @@ namespace DesignAutomation.Services
                 ActivityId = request.activityId,
                 Arguments = new Dictionary<string, IArgument>() 
                 {
-                    { "rvtFile", new XrefTreeArgument() {
-                        Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.inputObjectKey}", //địa chỉ định danh tệp tin trên Oss
+                    { "Input", new XrefTreeArgument() {
+                        Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.inputObjectKey}",
                         Verb = Verb.Get,
                         Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.AccessToken } }
                     } },
-                    { "resultFile", new XrefTreeArgument() {
+                    { "Output", new XrefTreeArgument() {
                         Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.resultObjectKey}",
                         Verb = Verb.Put,
                         Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.AccessToken } }
                     } }
-
-                    /*{ "InputDwg", new XrefTreeArgument() {
-                        Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.inputObjectKey}", //địa chỉ định danh tệp tin trên Oss
-                        Verb = Verb.Get,
-                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
-                    } },
-                    { "result", new XrefTreeArgument() {
-                        Url = $"urn:adsk.objects:os.object:{request.bucketKey}/{request.resultObjectKey}",
-                        Verb = Verb.Put,
-                        Headers = new Dictionary<string, string>() { { "Authorization", "Bearer " + token.access_token } }
-                    } }*/
                 }
             };
-
-            return await _daClient.CreateWorkItemAsync(workItem);
+            var result = await _daClient.CreateWorkItemAsync(workItem);
+            return new WorkItemResponse
+            {
+                Id = result.Id,
+                Status = result.Status.ToString(),
+                Progress = result.Progress,
+                ReportUrl = result.ReportUrl,
+            };
         }
 
-        public async Task<WorkItemStatus> GetWorkItemStatusAsync(string id)
+        public async Task<WorkItemResponse> GetWorkItemStatusAsync(string id)
         {
-            return await _daClient.GetWorkitemStatusAsync(id);
+            var result = await _daClient.GetWorkitemStatusAsync(id);
+            return new WorkItemResponse
+            {
+                Id = result.Id,
+                Status = result.Status.ToString(),
+                Progress = result.Progress,
+                ReportUrl = result.ReportUrl,
+            };
         }
     }
 }

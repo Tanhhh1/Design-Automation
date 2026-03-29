@@ -33,43 +33,44 @@ async function loadFiles() {
 }
 
 async function uploadFile(e) {
-    /*const file = e.target.files[0];
+    const fileInput = e.target;
+    const file = fileInput.files[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file); //đóng gói file vào formData
-    await fetch('/api/oss/upload', { method: 'POST', body: formData }); //gửi file đến /api/oss/upload
-    await loadFiles();*/
 
-    const file = e.target.files[0];
-    if (!file) return;
-    const resp = await fetch(`/api/oss/upload-url?fileName=${encodeURIComponent(file.name)}`); //lấy signed URL từ server
-    const data = await resp.json();
-    const signedUrl = data.uploadUrl; // Đây là địa chỉ trực tiếp dẫn đến Cloud của Autodesk
-    const uploadResp = await fetch(signedUrl, {
-        method: 'PUT', // Dùng PUT để đặt file vào vị trí đã định danh
-        body: file, // Gửi trực tiếp dữ liệu nhị phân (không đóng gói FormData)
-        headers: {
-            'Content-Type': 'application/octet-stream' // Báo hiệu đây là dữ liệu thô
+    const loader = document.getElementById('loader');
+    loader.classList.remove('hidden');
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/oss/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || "Upload failed");
         }
-    });
-    if (uploadResp.ok) {
-        alert("Upload trực tiếp thành công!");
+
+        alert("Upload thành công!");
         await loadFiles();
-    } else {
-        alert("Upload thất bại!");
+
+    } catch (err) {
+        console.error(err);
+        alert("Lỗi upload: " + err.message);
     }
 }
 
-async function downloadFile() {
+function downloadFile() {
     const select = document.getElementById('bucketFiles');
     const fileName = select.options[select.selectedIndex].text;
 
-    if (!fileName || fileName.includes("--")) {
-        alert("Vui lòng chọn một file trong danh sách!");
-        return;
+    if (!select.value || fileName.includes("--")) {
+        return alert("Vui lòng chọn file hợp lệ!");
     }
-    const apiPath = `/api/oss/download/${encodeURIComponent(fileName)}`;  
-    window.location.href = apiPath;
+    window.location.href = `/api/oss/download/${encodeURIComponent(fileName)}`;
 }
 
 function launchViewer(urn) {
